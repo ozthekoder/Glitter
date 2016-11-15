@@ -25,6 +25,7 @@ namespace OZ {
       Shader& link();
 
       // Wrap Calls to glUniform
+      void bind(GLuint location, GLuint value);
       void bind(GLuint location, GLfloat value);
       void bind(GLuint location, glm::mat4 const& matrix);
       void bind(GLuint location, glm::vec4 const& vector);
