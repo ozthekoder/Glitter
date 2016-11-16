@@ -11,8 +11,7 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-void main()
-{
+void main() {
     // Note that we read the multiplication from right to left
     gl_Position = projection * view * model * vec4(position, 1.0f);
     ourColor = vec3(1.0f, 1.0f, 1.0f);

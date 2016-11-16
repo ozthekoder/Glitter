@@ -45,7 +45,12 @@ int main(int argc, char * argv[]) {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-  auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr, nullptr);
+  const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+  const GLfloat mWidth = mode->width;
+  const GLfloat mHeight = mode->height;
+
+  //glfwGetPrimaryMonitor() can be passed as the 4th argument for full screen support
+  auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", glfwGetPrimaryMonitor(), nullptr);
 
   // Check for Valid Context
   if (mWindow == nullptr) {
