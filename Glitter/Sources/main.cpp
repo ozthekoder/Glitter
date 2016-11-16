@@ -16,6 +16,26 @@
 #include <iostream>
 
 using namespace OZ;
+
+bool keys[1024];
+bool firstMouse = true;
+GLfloat lastX = 640.0f,
+        lastY = 400.0f,
+        pitch = 0.0f,
+        yaw = 0.0f,
+        fov = 45.0f,
+        deltaTime = 0.0f, // Time between current frame and last frame
+        lastFrame = 0.0f; // Time of last frame
+int viewportWidth, viewportHeight;
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void do_movement();
+
 int main(int argc, char * argv[]) {
 
   // Load GLFW and Create a Window
@@ -38,12 +58,12 @@ int main(int argc, char * argv[]) {
   fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
   //Creates a triangle in the center of the viewport
-/*  GLfloat vertices[] = {*/
-    //// Positions          // Colors           // Texture Coords
-    //0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right
-    //0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right
-   //-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left
-   //-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left
+  /*  GLfloat vertices[] = {*/
+  //// Positions          // Colors           // Texture Coords
+  //0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right
+  //0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right
+  //-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left
+  //-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left
   /*};*/
 
   GLfloat vertices[] = {
@@ -162,23 +182,18 @@ int main(int argc, char * argv[]) {
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
   glEnableVertexAttribArray(1);
 
-/*  glVertexAttribPointer(2, 2, GL_FLOAT,GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));*/
+  /*  glVertexAttribPointer(2, 2, GL_FLOAT,GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6 * sizeof(GLfloat)));*/
   /*glEnableVertexAttribArray(2);*/
 
   //Clear the current VAO context.
   glBindVertexArray(0);
 
   //Create the viewport
-  int viewportWidth, viewportHeight;
   glfwGetFramebufferSize(mWindow, &viewportWidth, &viewportHeight);
   glViewport(0, 0, viewportWidth, viewportHeight);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   glm::mat4 view, projection;
-  // Note that we're translating the scene in the reverse direction of where we want to move
-  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-  projection = glm::perspective(45.0f, (float)(viewportWidth / viewportHeight), 0.1f, 100.0f);
 
 
   glEnable(GL_DEPTH_TEST);
@@ -195,12 +210,19 @@ int main(int argc, char * argv[]) {
     glm::vec3( 1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
   };
-  GLfloat rot = 1.0f;
+
+  glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetKeyCallback(mWindow, key_callback);
+  glfwSetCursorPosCallback(mWindow, mouse_callback);
+  glfwSetScrollCallback(mWindow, scroll_callback);
+
+
   // Rendering Loop
   while (glfwWindowShouldClose(mWindow) == false) {
-    if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-      glfwSetWindowShouldClose(mWindow, true);
-
+    GLfloat currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+    projection = glm::perspective(fov, (float)(viewportWidth / viewportHeight), 0.1f, 100.0f);
     // Background Fill Color
     glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -223,7 +245,10 @@ int main(int argc, char * argv[]) {
       glm::mat4 model;
       model = glm::translate(model, cubePositions[i]);
       GLfloat angle = 20.0f * i;
+
       model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+      view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
       shader
         .bind("model", model)
         .bind("view", view)
@@ -238,6 +263,7 @@ int main(int argc, char * argv[]) {
     // Flip Buffers and Draw
     glfwSwapBuffers(mWindow);
     glfwPollEvents();
+    do_movement();
   }
 
   glDeleteVertexArrays(1, &VAO);
@@ -246,4 +272,72 @@ int main(int argc, char * argv[]) {
 
   glfwTerminate();
   return EXIT_SUCCESS;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
+
+  std::cout << key << std::endl;
+  std::cout << action << std::endl;
+
+  if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    glfwSetWindowShouldClose(window, GL_TRUE);
+  if(action == GLFW_PRESS)
+    keys[key] = true;
+  else if(action == GLFW_RELEASE)
+    keys[key] = false;
+}
+
+void do_movement() {
+  // Camera controls
+  GLfloat cameraSpeed = 5.0f * deltaTime;
+
+  if(keys[GLFW_KEY_W])
+    cameraPos += cameraSpeed * cameraFront;
+  if(keys[GLFW_KEY_S])
+    cameraPos -= cameraSpeed * cameraFront;
+  if(keys[GLFW_KEY_A])
+    cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+  if(keys[GLFW_KEY_D])
+    cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+}
+
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+  if(firstMouse) {
+    lastX = xpos;
+    lastY = ypos;
+    firstMouse = false;
+  }
+
+  GLfloat xoffset = xpos - lastX;
+  GLfloat yoffset = lastY - ypos;
+  lastX = xpos;
+  lastY = ypos;
+
+  GLfloat sensitivity = 0.1;
+  xoffset *= sensitivity;
+  yoffset *= sensitivity;
+
+  yaw   += xoffset;
+  pitch += yoffset;
+
+  if(pitch > 89.0f)
+    pitch = 89.0f;
+  if(pitch < -89.0f)
+    pitch = -89.0f;
+
+  glm::vec3 front;
+  front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+  front.y = sin(glm::radians(pitch));
+  front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+  cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+  if(fov >= 1.0f && fov <= 45.0f)
+    fov -= yoffset;
+  if(fov <= 1.0f)
+    fov = 1.0f;
+  if(fov >= 45.0f)
+    fov = 45.0f;
 }
