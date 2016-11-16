@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <fstream>
 
@@ -129,6 +130,7 @@ int main(int argc, char * argv[]) {
   glfwGetFramebufferSize(mWindow, &viewportWidth, &viewportHeight);
   glViewport(0, 0, viewportWidth, viewportHeight);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
   // Rendering Loop
   while (glfwWindowShouldClose(mWindow) == false) {
     if (glfwGetKey(mWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -143,8 +145,13 @@ int main(int argc, char * argv[]) {
     GLfloat greenValue = (sin(timeValue) / 2) + 0.5;
     glm::vec4 color(0.0f, greenValue, 0.0f, 1.0f);
 
+    glm::mat4 trans;
+    trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+    trans = glm::rotate(trans,(GLfloat)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+
     shader
-    .activate();
+      .activate()
+      .bind("transform", trans);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
