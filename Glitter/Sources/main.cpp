@@ -14,13 +14,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include "texture-manager.hpp"
 
 using namespace OZ;
 
 bool keys[1024];
 bool firstMouse = true;
-GLfloat lastX = 640.0f,
-        lastY = 400.0f,
+GLfloat lastX = 720.0f,
+        lastY = 450.0f,
         pitch = 0.0f,
         yaw = 0.0f,
         fov = 45.0f,
@@ -50,7 +51,7 @@ int main(int argc, char * argv[]) {
   const GLfloat mHeight = mode->height;
 
   //glfwGetPrimaryMonitor() can be passed as the 4th argument for full screen support
-  auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", glfwGetPrimaryMonitor(), nullptr);
+  auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr /*glfwGetPrimaryMonitor()*/, nullptr);
 
   // Check for Valid Context
   if (mWindow == nullptr) {
@@ -119,15 +120,9 @@ int main(int argc, char * argv[]) {
     1, 2, 3    // Second Triangle
   };
 
-  int width1, height1, width2, height2, comp;
   std::string imagePath = PROJECT_SOURCE_DIR "/Glitter/Resources/container.jpg";
   std::string image2Path = PROJECT_SOURCE_DIR "/Glitter/Resources/awesomeface.png";
 
-
-  unsigned char* image1 = stbi_load(imagePath.c_str(), &width1, &height1, &comp, STBI_rgb);
-  unsigned char* image2 = stbi_load(image2Path.c_str(), &width2, &height2, &comp, STBI_rgb_alpha);
-
-  if (!image1 || !image2) fprintf(stderr, "%s %s %s\n", "Failed to Load Textures", imagePath.c_str(), image2Path.c_str());
 
   Shader shader;
   shader
@@ -135,35 +130,13 @@ int main(int argc, char * argv[]) {
     .attach("fragment.frag")
     .link();
 
-  GLuint texture1, texture2;
-
-  glGenTextures(1, &texture1);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width1, height1, 0, GL_RGB, GL_UNSIGNED_BYTE, image1);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(image1);
-  glBindTexture(GL_TEXTURE_2D, 0);
-
-  glGenTextures(1, &texture2);
-  glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, texture2);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width2, height2, 0, GL_RGBA, GL_UNSIGNED_BYTE, image2);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  stbi_image_free(image2);
-  glBindTexture(GL_TEXTURE_2D, 0);
-
   GLuint VAO; //First create a VAO so that all created VBO and EBO stuff is tracked.
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
+
+  TextureManager textureManager;
+  Texture* texture1 = textureManager.generateTexture(imagePath);
+  Texture* texture2 = textureManager.generateTexture(image2Path);
 
   //Creating a VBO
   GLuint VBO;
@@ -194,12 +167,9 @@ int main(int argc, char * argv[]) {
   glBindVertexArray(0);
 
   //Create the viewport
-  glfwGetFramebufferSize(mWindow, &viewportWidth, &viewportHeight);
-  glViewport(0, 0, viewportWidth, viewportHeight);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
   glm::mat4 view, projection;
-
 
   glEnable(GL_DEPTH_TEST);
 
@@ -224,6 +194,9 @@ int main(int argc, char * argv[]) {
 
   // Rendering Loop
   while (glfwWindowShouldClose(mWindow) == false) {
+    glfwGetFramebufferSize(mWindow, &viewportWidth, &viewportHeight);
+    glViewport(0, 0, viewportWidth, viewportHeight);
+
     GLfloat currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -237,13 +210,8 @@ int main(int argc, char * argv[]) {
     shader.activate();
     glBindVertexArray(VAO);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1);
-    shader.bind("ourTexture1", (GLuint)0);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2);
-    shader.bind("ourTexture2", (GLuint)1);
+    texture1->use(&shader, "ourTexture1");
+    texture2->use(&shader, "ourTexture2");
 
     for(GLuint i = 0; i < 10; i++)
     {
@@ -281,9 +249,6 @@ int main(int argc, char * argv[]) {
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode) {
 
-  std::cout << key << std::endl;
-  std::cout << action << std::endl;
-
   if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
     glfwSetWindowShouldClose(window, GL_TRUE);
   if(action == GLFW_PRESS)
@@ -308,7 +273,8 @@ void do_movement() {
 
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-  if(firstMouse) {
+  if(firstMouse)
+  {
     lastX = xpos;
     lastY = ypos;
     firstMouse = false;
@@ -319,7 +285,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   lastX = xpos;
   lastY = ypos;
 
-  GLfloat sensitivity = 0.1;
+  GLfloat sensitivity = 0.05;
   xoffset *= sensitivity;
   yoffset *= sensitivity;
 

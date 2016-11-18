@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 // Standard Headers
 #include <string>
@@ -13,6 +14,7 @@ namespace OZ {
   class Shader {
     public:
 
+      GLuint foo;
       // Implement Custom Constructor and Destructor
       Shader() { mProgram = glCreateProgram(); }
       ~Shader() { glDeleteProgram(mProgram); }
@@ -40,8 +42,8 @@ namespace OZ {
     private:
 
       // Disable Copying and Assignment
-      Shader(Shader const&) = delete;
-      Shader& operator=(Shader const&) = delete;
+      //Shader(Shader const&) = delete;
+      //Shader& operator=(Shader const&) = delete;
 
       // Private Member Variables
       GLuint mProgram;
