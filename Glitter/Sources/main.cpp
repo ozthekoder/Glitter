@@ -14,7 +14,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include "engine.hpp"
 #include "texture-manager.hpp"
+#include "input-manager.hpp"
 
 using namespace OZ;
 
@@ -23,7 +25,7 @@ bool firstMouse = true;
 GLfloat lastX = 720.0f,
         lastY = 450.0f,
         pitch = 0.0f,
-        yaw = 0.0f,
+        yaw = 270.0f,
         fov = 45.0f,
         deltaTime = 0.0f, // Time between current frame and last frame
         lastFrame = 0.0f; // Time of last frame
@@ -39,6 +41,9 @@ void do_movement();
 
 int main(int argc, char * argv[]) {
 
+  std::string configPath = PROJECT_SOURCE_DIR "/Glitter/Config/config.json";
+  Engine engine;
+  engine.loadConfig(configPath);
   // Load GLFW and Create a Window
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -49,6 +54,11 @@ int main(int argc, char * argv[]) {
   const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
   const GLfloat mWidth = mode->width;
   const GLfloat mHeight = mode->height;
+
+  std::function<void (double, double)> cb = [](double xdiff, double ydiff) {
+    std::cout << "FFFFFFFFFOOOOOOOO XDIFF: " << xdiff << " YDIFF: " << ydiff << std::endl;
+  };
+  eventEmitter.on<double, double>(0, cb);
 
   //glfwGetPrimaryMonitor() can be passed as the 4th argument for full screen support
   auto mWindow = glfwCreateWindow(mWidth, mHeight, "OpenGL", nullptr /*glfwGetPrimaryMonitor()*/, nullptr);
@@ -61,6 +71,7 @@ int main(int argc, char * argv[]) {
   // Create Context and Load OpenGL Functions
   glfwMakeContextCurrent(mWindow);
   gladLoadGL();
+
   fprintf(stderr, "OpenGL %s\n", glGetString(GL_VERSION));
 
   //Creates a triangle in the center of the viewport
@@ -190,8 +201,12 @@ int main(int argc, char * argv[]) {
   glfwSetKeyCallback(mWindow, key_callback);
   glfwSetCursorPosCallback(mWindow, mouse_callback);
   glfwSetScrollCallback(mWindow, scroll_callback);
+  //InputManager inputManager(mWindow);
+  double x, y;
 
+  glfwGetCursorPos(mWindow, &x, &y);
 
+  //std::cout << "X: " << x << " Y: " << y << std::endl;
   // Rendering Loop
   while (glfwWindowShouldClose(mWindow) == false) {
     glfwGetFramebufferSize(mWindow, &viewportWidth, &viewportHeight);
@@ -261,13 +276,13 @@ void do_movement() {
   // Camera controls
   GLfloat cameraSpeed = 5.0f * deltaTime;
 
-  if(keys[GLFW_KEY_W])
+  if(KeyboardHandler::keys[GLFW_KEY_W])
     cameraPos += cameraSpeed * cameraFront;
-  if(keys[GLFW_KEY_S])
+  if(KeyboardHandler::keys[GLFW_KEY_S])
     cameraPos -= cameraSpeed * cameraFront;
-  if(keys[GLFW_KEY_A])
+  if(KeyboardHandler::keys[GLFW_KEY_A])
     cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-  if(keys[GLFW_KEY_D])
+  if(KeyboardHandler::keys[GLFW_KEY_D])
     cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
@@ -302,6 +317,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   front.y = sin(glm::radians(pitch));
   front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
   cameraFront = glm::normalize(front);
+
+  double xdiff = xoffset;
+  double ydiff = yoffset;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {

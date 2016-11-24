@@ -2,8 +2,8 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include "shader.hpp"
 #include <iostream>
+#include "shader.hpp"
 
 namespace OZ {
   class Texture {
