@@ -13,7 +13,7 @@
 #include <vector>
 
 // Define Namespace
-namespace Mirage
+namespace OZ
 {
     // Vertex Format
     struct Vertex {

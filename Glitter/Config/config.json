@@ -15,17 +15,30 @@
   "camera": {
     "type": 0
   },
+  "viewport": {
+    "near": 0.1,
+    "far": 100.0,
+    "fov": 45.0
+  },
   "inputs": {
     "keyboard": true,
     "mouse": true
   },
+  "shaders": [
+    "/Glitter/Shaders/vertext.vert",
+    "/Glitter/Shaders/fragment.frag"
+  ],
   "assets": {
     "textures": [
       "/Glitter/Resources/container.jpg",
-      "/Glitter/Resources/awesomeface.png"
+      "/Glitter/Resources/awesomeface.png",
+      "/Glitter/Resources/models/woodenbox/textures/container1.png",
+      "/Glitter/Resources/models/woodenbox/textures/container2.jpg",
+      "/Glitter/Resources/models/woodenbox/textures/container3.png"
     ],
-    "models": [],
-    "shaders": [],
+    "models": [
+      "/Glitter/Resources/models/woodenbox/box.fbx"
+    ],
     "sprites": []
   },
   "events": {
