@@ -14,12 +14,12 @@
 namespace OZ {
   class Viewport {
     public:
-      GLfloat fov, near, far;
+      GLfloat fov, nearZ, farZ;
       int width, height;
       Viewport() {}
       Viewport(GLfloat initNear, GLfloat initFar, GLfloat initFov) {
-        near = initNear;
-        far = initFar;
+        nearZ = initNear;
+        farZ = initFar;
         fov = initFov;
       }
       ~Viewport() {}

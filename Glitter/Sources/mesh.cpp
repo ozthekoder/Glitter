@@ -21,7 +21,7 @@ namespace OZ {
     // Walk the Tree of Scene Nodes
     auto index = filename.find_last_of("/");
     if (!scene) fprintf(stderr, "%s\n", loader.GetErrorString());
-    else parse(filename.substr(0, index), scene->mRootNode, scene);
+    else parse(filename.substr(0, index+1), scene->mRootNode, scene);
   }
 
   Mesh::Mesh(std::vector<Vertex> const & vertices,
@@ -71,6 +71,7 @@ namespace OZ {
       if (i.second == "diffuse")  uniform += (diffuse++  > 0) ? std::to_string(diffuse)  : "";
       else if (i.second == "specular") uniform += (specular++ > 0) ? std::to_string(specular) : "";
 
+      //uniform = "material." + uniform;
       // Bind Correct Textures and Vertex Array Before Drawing
       glActiveTexture(GL_TEXTURE0 + unit);
       glBindTexture(GL_TEXTURE_2D, i.first);
@@ -128,7 +129,7 @@ namespace OZ {
       // Load the Texture Image from File
       aiString str; material->GetTexture(type, i, & str);
       std::string filename = str.C_Str(); int width, height, channels;
-      filename = path + "/textures/" + filename;
+      filename = path + filename;
       unsigned char * image = stbi_load(filename.c_str(), & width, & height, & channels, 0);
       if (!image) fprintf(stderr, "%s %s\n", "Failed to Load Texture", filename.c_str());
 

@@ -25,14 +25,18 @@ namespace OZ {
     this->pitch = 0.0f;
     this->yaw = 270.0f;
     this->velocity = 5.0f;
-    this->sensitivity = 0.05f;
+    this->sensitivity = 0.1f;
 
     std::function<void (double ,double)> mouseCB = [this](double xdiff, double ydiff) {
-      std::cout << "XDIFF "<< xdiff << " YDIFF " << ydiff << std::endl;
+      yaw += (xdiff * sensitivity);
+      pitch += (ydiff * sensitivity);
+      if(pitch > 89.9f)
+        pitch = 89.9f;
+      if(pitch < -89.9f)
+        pitch = -89.9f;
     };
 
     std::function<void (int ,int)> keyboardCB = [this](int key, int action) {
-      std::cout << "ACTION "<< action << " KEY " << key << std::endl;
       if(action == GLFW_PRESS) {
         if(key == GLFW_KEY_W)
           moveDirections[MOVE_FORWARD] = true;
@@ -42,7 +46,7 @@ namespace OZ {
           moveDirections[MOVE_LEFT] = true;
         if(key == GLFW_KEY_D)
           moveDirections[MOVE_RIGHT] = true;
-      } else {
+      } else if(action == GLFW_RELEASE) {
         if(key == GLFW_KEY_W)
           moveDirections[MOVE_FORWARD] = false;
         if(key == GLFW_KEY_S)
@@ -106,31 +110,18 @@ namespace OZ {
   }
 
   Camera& Camera::calculateLinearDisplacement(GLfloat dt) {
-  if(this->moveDirections[0])
-    this->position += (this->velocity * dt) * this->direction;
-  if(this->moveDirections[2])
-    this->position -= (this->velocity * dt) * this->direction;
-  if(this->moveDirections[1])
-    this->position -= glm::normalize(glm::cross(this->direction, this->up)) * (this->velocity * dt);
-  if(this->moveDirections[3])
-    this->position += glm::normalize(glm::cross(this->direction, this->up)) * (this->velocity * dt);
+    if(this->moveDirections[MOVE_FORWARD])
+      this->position += (this->velocity * dt) * this->direction;
+    if(this->moveDirections[MOVE_BACK])
+      this->position -= (this->velocity * dt) * this->direction;
+    if(this->moveDirections[MOVE_LEFT])
+      this->position -= glm::normalize(glm::cross(this->direction, this->up)) * (this->velocity * dt);
+    if(this->moveDirections[MOVE_RIGHT])
+      this->position += glm::normalize(glm::cross(this->direction, this->up)) * (this->velocity * dt);
     return *this;
   }
 
-  Camera& Camera::calculateAngularDisplacement(GLFWwindow* window, GLfloat dt) {
-    int w, h;
-    double xpos, ypos;
-    glfwGetWindowSize(window, &w, &h);
-    glfwGetCursorPos(window, &xpos, &ypos);
-
-    this->yaw += this->sensitivity * dt * float(w/2 - xpos);
-    this->pitch += this->sensitivity * dt * float(h/2 - ypos);
-
-    if(this->pitch > 89.9f)
-      this->pitch = 89.9f;
-    if(this->pitch < -89.9f)
-      this->pitch = -89.9f;
-
+  Camera& Camera::calculateAngularDisplacement() {
     glm::vec3 front;
     front.x = cos(glm::radians(this->yaw)) * cos(glm::radians(this->pitch));
     front.y = sin(glm::radians(this->pitch));

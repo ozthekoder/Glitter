@@ -16,7 +16,6 @@ namespace OZ {
       else if(action == GLFW_RELEASE)
         KeyboardHandler::keys[key] = false;
 
-      std::cout << "KEY: "<< key << " ACTION: " << action << std::endl;
       eventEmitter.emit(1, key, action);
   }
 };

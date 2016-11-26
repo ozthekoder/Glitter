@@ -9,24 +9,26 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "globals.h"
+#include "keyboard-handler.hpp"
+#include "mouse-handler.hpp"
+
 #define CAMERA_TYPE_FPS 0
 #define CAMERA_TYPE_TPS 1
 #define CAMERA_TYPE_STRATEGY 2
 #define CAMERA_TYPE_SIDE_SCROLLER 3
+
 #define MOVE_FORWARD 0
 #define MOVE_LEFT 1
 #define MOVE_BACK 2
 #define MOVE_RIGHT 3
-
-
 
 namespace OZ {
   class Camera {
     public:
       GLuint type;
       bool moveDirections[4];
-      GLfloat pitch, yaw, velocity, sensitivity;
-      glm::vec3 position, direction, up;
+      GLfloat pitch, yaw, velocity, sensitivity, lastX, lastY, zoom;
+      glm::vec3 position, direction, up, worldUp, right;
       Camera() {};
       ~Camera() {};
       Camera& init(GLuint type);
@@ -41,7 +43,7 @@ namespace OZ {
       Camera& setUp(GLfloat x, GLfloat y, GLfloat z);
       Camera& setUp(glm::vec3 upVec);
       Camera& calculateLinearDisplacement(GLfloat dt);
-      Camera& calculateAngularDisplacement(GLFWwindow* window, GLfloat dt);
+      Camera& calculateAngularDisplacement();
       glm::mat4 getViewMatrix();
   };
 };

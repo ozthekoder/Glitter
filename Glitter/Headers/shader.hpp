@@ -16,14 +16,15 @@ namespace OZ {
 
       GLuint foo;
       // Implement Custom Constructor and Destructor
-      Shader() { mProgram = glCreateProgram(); }
+      Shader() {}
       ~Shader() { glDeleteProgram(mProgram); }
 
       // Public Member Functions
       Shader& activate();
+      Shader& init();
       Shader& attach(std::string const& filename);
-      GLuint   create(std::string const& filename);
-      GLuint   get() { return mProgram; }
+      GLuint  create(std::string const& filename);
+      GLuint  get() { return mProgram; }
       Shader& link();
 
       // Wrap Calls to glUniform

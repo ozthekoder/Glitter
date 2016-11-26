@@ -19,7 +19,7 @@ namespace OZ {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-    this->lastFrameTime = 0.0;
+    this->lastFrameTime = 0.0f;
     return *this;
   }
 
@@ -56,6 +56,7 @@ namespace OZ {
   Engine& Engine::loadAssets() {
     int i = 0;
     for (std::string modelPath : this->config["assets"]["models"]) {
+      modelPath = PROJECT_SOURCE_DIR + modelPath;
       this->models.push_back(new Mesh(modelPath));
       i++;
     }
@@ -64,7 +65,9 @@ namespace OZ {
 
   Engine& Engine::attachAndLinkShaders() {
     int i = 0;
+    this->shader.init();
     for (std::string shaderPath : this->config["shaders"]) {
+      shaderPath = PROJECT_SOURCE_DIR + shaderPath;
       this->shader.attach(shaderPath);
       i++;
     }
@@ -73,6 +76,9 @@ namespace OZ {
   }
 
   Engine& Engine::registerInputListeners() {
+    MouseHandler::init(this->window);
+    KeyboardHandler::init(this->window);
+
     return *this;
   }
 
@@ -119,44 +125,30 @@ namespace OZ {
     glfwPollEvents();
     GLfloat dt = this->getDt();
     glm::mat4 model, view, projection;
-    glm::vec3 cubePositions[] = {
-      glm::vec3( 0.0f,  0.0f,  0.0f),
-      glm::vec3( 2.0f,  5.0f, -15.0f),
-      glm::vec3(-1.5f, -2.2f, -2.5f),
-      glm::vec3(-3.8f, -2.0f, -12.3f),
-      glm::vec3( 2.4f, -0.4f, -3.5f),
-      glm::vec3(-1.7f,  3.0f, -7.5f),
-      glm::vec3( 1.3f, -2.0f, -2.5f),
-      glm::vec3( 1.5f,  2.0f, -2.5f),
-      glm::vec3( 1.5f,  0.2f, -1.5f),
-      glm::vec3(-1.3f,  1.0f, -1.5f)
-    };
 
     glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    shader.activate();
+
     projection = this->viewport->getProjectionMatrix();
-    for(GLuint i = 0; i < 10; i++)
-    {
-      glm::mat4 model;
-      model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 20.0f * i;
+    view = this->camera
+      .calculateLinearDisplacement(dt)
+      .calculateAngularDisplacement()
+      .getViewMatrix();
 
-      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-      view = this->camera
-        .calculateLinearDisplacement(dt)
-        .calculateAngularDisplacement(this->window , dt)
-        .getViewMatrix();
 
-      shader.activate();
-      for(Mesh* m : this->models) {
-        m->draw(shader.get());
-      }
-
+      model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+      model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
       shader
         .bind("model", model)
         .bind("view", view)
         .bind("projection", projection);
-    }
+
+      for(Mesh* m : this->models) {
+        m->draw(shader.get());
+      }
+
+    //}
 
     glfwSwapBuffers(this->window);
     return *this;

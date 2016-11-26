@@ -7,7 +7,7 @@ namespace OZ {
   }
 
   glm::mat4 Viewport::getProjectionMatrix() {
-    glm::mat4 projection = glm::perspective(fov, (float)(this->width / this->height), this->near, this->far);
+    glm::mat4 projection = glm::perspective(fov, (float)(this->width / this->height), this->nearZ, this->farZ);
     return projection;
   }
 }

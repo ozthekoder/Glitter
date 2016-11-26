@@ -17,9 +17,8 @@ namespace OZ {
       MouseHandler::mouseX = xpos;
       MouseHandler::mouseY = ypos;
       double xdiff = MouseHandler::mouseX - MouseHandler::lastMouseX;
-      double ydiff = MouseHandler::mouseY - MouseHandler::lastMouseY;
+      double ydiff = MouseHandler::lastMouseY - MouseHandler::mouseY;
 
-      std::cout << "MOUSEX: "<< xpos << " MOUSEY: " << ypos << std::endl;
       eventEmitter.emit(0, xdiff, ydiff);
   }
 };

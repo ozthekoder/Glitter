@@ -8,6 +8,11 @@
 
 // Define Namespace
 namespace OZ {
+  Shader& Shader::init() {
+    mProgram = glCreateProgram();
+    return *this;
+  }
+
   Shader& Shader::activate() {
     glUseProgram(mProgram);
     return *this;
@@ -20,8 +25,7 @@ namespace OZ {
 
   Shader& Shader::attach(std::string const& filename) {
     // Load GLSL Shader Source from File
-    std::string path = PROJECT_SOURCE_DIR "/Glitter/Shaders/";
-    std::ifstream fd(path + filename);
+    std::ifstream fd(filename);
     auto src = std::string(std::istreambuf_iterator<char>(fd),
         (std::istreambuf_iterator<char>()));
 

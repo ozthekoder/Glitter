@@ -25,8 +25,8 @@
     "mouse": true
   },
   "shaders": [
-    "/Glitter/Shaders/vertext.vert",
-    "/Glitter/Shaders/fragment.frag"
+    "/Glitter/Shaders/model_loading.vert",
+    "/Glitter/Shaders/model_loading.frag"
   ],
   "assets": {
     "textures": [
@@ -37,7 +37,7 @@
       "/Glitter/Resources/models/woodenbox/textures/container3.png"
     ],
     "models": [
-      "/Glitter/Resources/models/woodenbox/box.fbx"
+      "/Glitter/Resources/models/nanosuit/nanosuit.obj"
     ],
     "sprites": []
   },
