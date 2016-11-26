@@ -6,7 +6,7 @@ namespace OZ {
   Engine& Engine::loadConfig(std::string configFile) {
     std::ifstream fileStream(configFile);
     auto src = std::string(std::istreambuf_iterator<char>(fileStream), (std::istreambuf_iterator<char>()));
-    this->config = Json::parse(src);
+    this->config = nlohmann::json::parse(src);
     std::cout << "LOADED CONFIG ==>> " << this->config.dump(2) << std::endl;
 
     return *this;
@@ -56,19 +56,21 @@ namespace OZ {
   Engine& Engine::loadAssets() {
     int i = 0;
     for (std::string modelPath : this->config["assets"]["models"]) {
-      this->models.push_back(new Mesh(modelPath));
+      this->models.push_back(new Mesh(PROJECT_SOURCE_DIR + modelPath));
       i++;
     }
     return *this;
   }
 
   Engine& Engine::attachAndLinkShaders() {
+    this->shader = new Shader();
     int i = 0;
     for (std::string shaderPath : this->config["shaders"]) {
-      this->shader.attach(shaderPath);
+      shaderPath = PROJECT_SOURCE_DIR + shaderPath;
+      this->shader->attach(shaderPath);
       i++;
     }
-    shader.link();
+    shader->link();
     return *this;
   }
 
@@ -132,6 +134,14 @@ namespace OZ {
       glm::vec3(-1.3f,  1.0f, -1.5f)
     };
 
+    // Positions of the point lights
+    glm::vec3 pointLightPositions[] = {
+      glm::vec3(0.7f,  0.2f,  2.0f),
+      glm::vec3(2.3f, -3.3f, -4.0f),
+      glm::vec3(-4.0f,  2.0f, -12.0f),
+      glm::vec3(0.0f,  0.0f, -3.0f)
+    };
+
     glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     projection = this->viewport->getProjectionMatrix();
@@ -147,13 +157,13 @@ namespace OZ {
         .calculateAngularDisplacement(this->window , dt)
         .getViewMatrix();
 
-      shader.activate();
+      this->shader->activate();
       for(Mesh* m : this->models) {
-        m->draw(shader.get());
+        m->draw(this->shader->get());
       }
 
       shader
-        .bind("model", model)
+        ->bind("model", model)
         .bind("view", view)
         .bind("projection", projection);
     }

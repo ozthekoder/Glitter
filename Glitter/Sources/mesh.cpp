@@ -68,9 +68,9 @@ namespace OZ {
     for (auto &i : mTextures) {
       // Set Correct Uniform Names Using Texture Type (Omit ID for 0th Texture)
       std::string uniform = i.second;
-      if (i.second == "diffuse")  uniform += (diffuse++  > 0) ? std::to_string(diffuse)  : "";
-      else if (i.second == "specular") uniform += (specular++ > 0) ? std::to_string(specular) : "";
-
+      if (i.second == "diffuse")  uniform = "material." + uniform; //(diffuse++  > 0) ? std::to_string(diffuse)  : "";
+      else if (i.second == "specular") uniform = "material." + uniform; //(specular++ > 0) ? std::to_string(specular) : "";
+      else break;
       // Bind Correct Textures and Vertex Array Before Drawing
       glActiveTexture(GL_TEXTURE0 + unit);
       glBindTexture(GL_TEXTURE_2D, i.first);
@@ -128,7 +128,7 @@ namespace OZ {
       // Load the Texture Image from File
       aiString str; material->GetTexture(type, i, & str);
       std::string filename = str.C_Str(); int width, height, channels;
-      filename = path + "/textures/" + filename;
+      //filename = path + "/textures/" + filename;
       unsigned char * image = stbi_load(filename.c_str(), & width, & height, & channels, 0);
       if (!image) fprintf(stderr, "%s %s\n", "Failed to Load Texture", filename.c_str());
 

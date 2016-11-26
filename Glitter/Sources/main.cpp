@@ -5,20 +5,20 @@ using namespace OZ;
 
 int main(int argc, char * argv[]) {
 
-  std::string configPath = "/Glitter/Config/config.json";
+  std::string configPath = PROJECT_SOURCE_DIR "/Glitter/Config/config.json";
   Engine engine;
   std::cout << "BBBBBB" << std::endl;
 
   try {
-  /*  engine*/
-      //.loadConfig(configPath)
-      //.init()
-      //.createWindow()
-      /*.loadAssets();*/
-      //.attachAndLinkShaders();
-      //.setupViewport();
-      //.setupCamera();
-      //.runWorld();
+    engine
+      .loadConfig(configPath)
+      .init()
+      .createWindow()
+      .loadAssets()
+      .attachAndLinkShaders()
+      .setupViewport()
+      .setupCamera()
+      .runWorld();
       std::cout << "AAAAAAA" << std::endl;
 
   } catch (const char* msg) {

@@ -27,19 +27,19 @@
 #include "viewport.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
-#include "mesh.hpp"
-using Json = nlohmann::json;
+#include "model.hpp"
 
+using Json = nlohmann::json;
 namespace OZ {
   class Engine {
     public:
       Json config;
       Json state;
-      std::vector<Mesh*> models;
+      std::vector<Model> models;
       GLfloat lastFrameTime;
       GLFWwindow* window;
       Camera camera;
-      Shader shader;
+      Shader* shader;
       Viewport* viewport;
       Engine() {};
       ~Engine() {};

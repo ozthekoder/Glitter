@@ -2,6 +2,7 @@
 
 // System Headers
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -14,10 +15,9 @@ namespace OZ {
   class Shader {
     public:
 
-      GLuint foo;
       // Implement Custom Constructor and Destructor
-      Shader() { mProgram = glCreateProgram(); }
-      ~Shader() { glDeleteProgram(mProgram); }
+      Shader();
+      ~Shader();
 
       // Public Member Functions
       Shader& activate();

@@ -14,16 +14,18 @@
 namespace OZ {
   class Viewport {
     public:
-      GLfloat fov, near, far;
-      int width, height;
-      Viewport() {}
-      Viewport(GLfloat initNear, GLfloat initFar, GLfloat initFov) {
-        near = initNear;
-        far = initFar;
-        fov = initFov;
-      }
-      ~Viewport() {}
-      void init(GLFWwindow* window);
-      glm::mat4 getProjectionMatrix();
+	  GLfloat fov;
+	  GLfloat nearZ;
+	  GLfloat farZ;
+    int width, height;
+    Viewport() {};
+    Viewport(GLfloat initNear, GLfloat initFar, GLfloat initFov) {
+      nearZ = initNear;
+      farZ = initFar;
+      fov = initFov;
+    };
+    ~Viewport() {};
+    void init(GLFWwindow* window);
+    glm::mat4 getProjectionMatrix();
   };
 };
