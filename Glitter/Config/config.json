@@ -37,7 +37,9 @@
       "/Glitter/Resources/models/woodenbox/textures/container3.png"
     ],
     "models": [
-      "/Glitter/Resources/models/nanosuit/nanosuit.obj"
+      "/Glitter/Resources/models/troll/Troll.fbx",
+      "/Glitter/Resources/models/nanosuit/nanosuit.obj",
+      "/Glitter/Resources/models/woodenbox/woodenbox.fbx"
     ],
     "sprites": []
   },

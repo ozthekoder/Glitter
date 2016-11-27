@@ -20,6 +20,7 @@ namespace OZ {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
     this->lastFrameTime = 0.0f;
+    this->FPS = 0;
     return *this;
   }
 
@@ -110,12 +111,9 @@ namespace OZ {
   Engine& Engine::runWorld() {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_DEPTH_TEST);
-
     while (glfwWindowShouldClose(this->window) == false) {
       this->runFrame();
     }
-
-    //glDeleteVertexArrays(1, &VAO);
     glfwTerminate();
 
     return *this;
@@ -124,7 +122,8 @@ namespace OZ {
   Engine& Engine::runFrame() {
     glfwPollEvents();
     GLfloat dt = this->getDt();
-    glm::mat4 model, view, projection;
+    this->FPS = int(1.0f / dt);
+    glm::mat4 view, projection;
 
     glClearColor(0.25f, 0.25f, 0.25f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -136,19 +135,19 @@ namespace OZ {
       .calculateAngularDisplacement()
       .getViewMatrix();
 
-
-      model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+    unsigned int i = 0;
+    for(Mesh* m : this->models) {
+      glm::mat4 model;
+      model = glm::translate(model, glm::vec3((10.0f * i), -1.75f, 0.0f)); // Translate it down a bit so it's at the center of the scene
       model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// It's a bit too big for our scene, so scale it down
       shader
         .bind("model", model)
         .bind("view", view)
         .bind("projection", projection);
 
-      for(Mesh* m : this->models) {
-        m->draw(shader.get());
-      }
-
-    //}
+      m->draw(shader.get());
+      i++;
+    }
 
     glfwSwapBuffers(this->window);
     return *this;

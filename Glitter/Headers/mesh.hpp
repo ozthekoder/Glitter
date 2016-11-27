@@ -17,119 +17,54 @@
 #include "shader.hpp"
 
 // Define Namespace
-namespace OZ
-{
+namespace OZ {
 
+  // Vertex Format
   struct Vertex {
-    // Position
-    glm::vec3 Position;
-    // Normal
-    glm::vec3 Normal;
-    // TexCoords
-    glm::vec2 TexCoords;
-  };
-
-  struct Texture {
-    GLuint id;
-    std::string type;
-    aiString path;
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec2 uv;
   };
 
   class Mesh {
-  public:
-    /*  Mesh Data  */
-    std::vector<Vertex> vertices;
-    std::vector<GLuint> indices;
-    std::vector<Texture> textures;
+    public:
 
-    /*  Functions  */
-    // Constructor
-    Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures)
-    {
-      this->vertices = vertices;
-      this->indices = indices;
-      this->textures = textures;
+      // Implement Default Constructor and Destructor
+      Mesh() { glGenVertexArrays(1, & mVertexArray); }
+      ~Mesh() { glDeleteVertexArrays(1, & mVertexArray); }
 
-      // Now that we have all the required data, set the vertex buffers and its attribute pointers.
-      this->setupMesh();
-    }
+      // Implement Custom Constructors
+      Mesh(std::string const & filename);
+      Mesh(std::vector<Vertex> const & vertices,
+          std::vector<GLuint> const & indices,
+          std::map<GLuint, std::string> const & textures);
 
-    // Render the mesh
-    void Draw(Shader shader)
-    {
-      // Bind appropriate textures
-      GLuint diffuseNr = 1;
-      GLuint specularNr = 1;
-      for (GLuint i = 0; i < this->textures.size(); i++)
-      {
-        glActiveTexture(GL_TEXTURE0 + i); // Active proper texture unit before binding
-                                          // Retrieve texture number (the N in diffuse_textureN)
-        std::stringstream ss;
-        std::string number;
-        std::string name = this->textures[i].type;
-        if (name == "texture_diffuse")
-          ss << diffuseNr++; // Transfer GLuint to stream
-        else if (name == "texture_specular")
-          ss << specularNr++; // Transfer GLuint to stream
-        number = ss.str();
-        // Now set the sampler to the correct texture unit
-        glUniform1i(glGetUniformLocation(shader.get(), (name + number).c_str()), i);
-        // And finally bind the texture
-        glBindTexture(GL_TEXTURE_2D, this->textures[i].id);
-      }
+      // Public Member Functions
+      void draw(GLuint shader);
 
-      // Also set each mesh's shininess property to a default value (if you want you could extend this to another mesh property and possibly change this value)
-      glUniform1f(glGetUniformLocation(shader.get(), "material.shininess"), 16.0f);
+    private:
 
-      // Draw mesh
-      glBindVertexArray(this->VAO);
-      glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
-      glBindVertexArray(0);
+      // Disable Copying and Assignment
+      Mesh(Mesh const &) = delete;
+      Mesh & operator=(Mesh const &) = delete;
 
-      // Always good practice to set everything back to defaults once configured.
-      for (GLuint i = 0; i < this->textures.size(); i++)
-      {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, 0);
-      }
-    }
+      // Private Member Functions
+      void parse(std::string const & path, aiNode const * node, aiScene const * scene);
+      void parse(std::string const & path, aiMesh const * mesh, aiScene const * scene);
+      std::map<GLuint, std::string> process(std::string const & path,
+          aiMaterial * material,
+          aiTextureType type);
 
-  private:
-    /*  Render data  */
-    GLuint VAO, VBO, EBO;
+      // Private Member Containers
+      std::vector<std::unique_ptr<Mesh>> mSubMeshes;
+      std::vector<GLuint> mIndices;
+      std::vector<Vertex> mVertices;
+      std::map<GLuint, std::string> mTextures;
 
-    /*  Functions    */
-    // Initializes all the buffer objects/arrays
-    void setupMesh() {
-      // Create buffers/arrays
-      glGenVertexArrays(1, &this->VAO);
-      glGenBuffers(1, &this->VBO);
-      glGenBuffers(1, &this->EBO);
+      // Private Member Variables
+      GLuint mVertexArray;
+      GLuint mVertexBuffer;
+      GLuint mElementBuffer;
 
-      glBindVertexArray(this->VAO);
-      // Load data into vertex buffers
-      glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-      // A great thing about structs is that their memory layout is sequential for all its items.
-      // The effect is that we can simply pass a pointer to the struct and it translates perfectly to a glm::vec3/2 array which
-      // again translates to 3/2 floats which translates to a byte array.
-      glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
-
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-      glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint), &this->indices[0], GL_STATIC_DRAW);
-
-      // Set the vertex attribute pointers
-      // Vertex Positions
-      glEnableVertexAttribArray(0);
-      glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)0);
-      // Vertex Normals
-      glEnableVertexAttribArray(1);
-      glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, Normal));
-      // Vertex Texture Coords
-      glEnableVertexAttribArray(2);
-      glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*)offsetof(Vertex, TexCoords));
-
-      glBindVertexArray(0);
-    }
   };
-
 };

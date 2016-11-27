@@ -24,22 +24,23 @@
 #include "mouse-handler.hpp"
 #include "event-emitter.hpp"
 #include "json.hpp"
+#include "mesh.hpp"
 #include "viewport.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
-#include "model.hpp"
 
 using Json = nlohmann::json;
 namespace OZ {
   class Engine {
     public:
+      unsigned int FPS;
       Json config;
       Json state;
-      std::vector<Model> models;
+      std::vector<Mesh*> models;
       GLfloat lastFrameTime;
       GLFWwindow* window;
       Camera camera;
-      Shader* shader;
+      Shader shader;
       Viewport* viewport;
       Engine() {};
       ~Engine() {};

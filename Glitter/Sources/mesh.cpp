@@ -30,37 +30,37 @@ namespace OZ {
     : mIndices(indices)
       , mVertices(vertices)
       , mTextures(textures) {
-    // Bind a Vertex Array Object
-    glGenVertexArrays(1, & mVertexArray);
-    glBindVertexArray(mVertexArray);
+        // Bind a Vertex Array Object
+        glGenVertexArrays(1, & mVertexArray);
+        glBindVertexArray(mVertexArray);
 
-    // Copy Vertex Buffer Data
-    glGenBuffers(1, & mVertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER,
-        mVertices.size() * sizeof(Vertex),
-        & mVertices.front(), GL_STATIC_DRAW);
+        // Copy Vertex Buffer Data
+        glGenBuffers(1, & mVertexBuffer);
+        glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+        glBufferData(GL_ARRAY_BUFFER,
+            mVertices.size() * sizeof(Vertex),
+            & mVertices.front(), GL_STATIC_DRAW);
 
-    // Copy Index Buffer Data
-    glGenBuffers(1, & mElementBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-        mIndices.size() * sizeof(GLuint),
-        & mIndices.front(), GL_STATIC_DRAW);
+        // Copy Index Buffer Data
+        glGenBuffers(1, & mElementBuffer);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+            mIndices.size() * sizeof(GLuint),
+            & mIndices.front(), GL_STATIC_DRAW);
 
-    // Set Shader Attributes
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(Vertex, position));
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(Vertex, normal));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(Vertex, uv));
-    glEnableVertexAttribArray(0); // Vertex Positions
-    glEnableVertexAttribArray(1); // Vertex Normals
-    glEnableVertexAttribArray(2); // Vertex UVs
+        // Set Shader Attributes
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(Vertex, position));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(Vertex, normal));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid *) offsetof(Vertex, uv));
+        glEnableVertexAttribArray(0); // Vertex Positions
+        glEnableVertexAttribArray(1); // Vertex Normals
+        glEnableVertexAttribArray(2); // Vertex UVs
 
-    // Cleanup Buffers
-    glBindVertexArray(0);
-    glDeleteBuffers(1, & mVertexBuffer);
-    glDeleteBuffers(1, & mElementBuffer);
-  }
+        // Cleanup Buffers
+        glBindVertexArray(0);
+        glDeleteBuffers(1, & mVertexBuffer);
+        glDeleteBuffers(1, & mElementBuffer);
+      }
 
   void Mesh::draw(GLuint shader) {
     unsigned int unit = 0, diffuse = 0, specular = 0;
@@ -93,7 +93,7 @@ namespace OZ {
     std::vector<Vertex> vertices; Vertex vertex;
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
       if (mesh->mTextureCoords[0])
-      vertex.uv       = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+        vertex.uv       = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
       vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
       vertex.normal   = glm::vec3(mesh->mNormals[i].x,  mesh->mNormals[i].y,  mesh->mNormals[i].z);
       vertices.push_back(vertex);
@@ -129,34 +129,37 @@ namespace OZ {
       // Load the Texture Image from File
       aiString str; material->GetTexture(type, i, & str);
       std::string filename = str.C_Str(); int width, height, channels;
-      filename = path + filename;
-      unsigned char * image = stbi_load(filename.c_str(), & width, & height, & channels, 0);
-      if (!image) fprintf(stderr, "%s %s\n", "Failed to Load Texture", filename.c_str());
+      std::cout << "FILENAME " << filename << std::endl;
+      if(filename.at(0) != '*') {
+        filename = path + filename;
+        unsigned char * image = stbi_load(filename.c_str(), & width, & height, & channels, 0);
+        if (!image) fprintf(stderr, "%s %s\n", "Failed to Load Texture", filename.c_str());
 
-      // Set the Correct Channel Format
-      switch (channels) {
-        case 1 : format = GL_ALPHA;     break;
-        case 2 : format = GL_LUMINANCE; break;
-        case 3 : format = GL_RGB;       break;
-        case 4 : format = GL_RGBA;      break;
+        // Set the Correct Channel Format
+        switch (channels) {
+          case 1 : format = GL_ALPHA;     break;
+          case 2 : format = GL_LUMINANCE; break;
+          case 3 : format = GL_RGB;       break;
+          case 4 : format = GL_RGBA;      break;
+        }
+
+        // Bind Texture and Set Filtering Levels
+        glGenTextures(1, & texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexImage2D(GL_TEXTURE_2D, 0, format,
+            width, height, 0, format, GL_UNSIGNED_BYTE, image);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // Release Image Pointer and Store the Texture
+        stbi_image_free(image);
+        if (type == aiTextureType_DIFFUSE)  mode = "diffuse";
+        else if (type == aiTextureType_SPECULAR) mode = "specular";
+        textures.insert(std::make_pair(texture, mode));
       }
-
-      // Bind Texture and Set Filtering Levels
-      glGenTextures(1, & texture);
-      glBindTexture(GL_TEXTURE_2D, texture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage2D(GL_TEXTURE_2D, 0, format,
-          width, height, 0, format, GL_UNSIGNED_BYTE, image);
-      glGenerateMipmap(GL_TEXTURE_2D);
-
-      // Release Image Pointer and Store the Texture
-      stbi_image_free(image);
-      if (type == aiTextureType_DIFFUSE)  mode = "diffuse";
-      else if (type == aiTextureType_SPECULAR) mode = "specular";
-      textures.insert(std::make_pair(texture, mode));
     }
     return textures;
   }
