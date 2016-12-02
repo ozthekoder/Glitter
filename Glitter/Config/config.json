@@ -7,7 +7,7 @@
     }
   },
   "window": {
-    "fullscreen" : true,
+    "fullscreen" : false,
     "title": "OzEngine",
     "width": 1200,
     "height": 800
@@ -37,10 +37,7 @@
       "/Glitter/Resources/models/woodenbox/textures/container3.png"
     ],
     "models": [
-      "/Glitter/Resources/models/makehuman/male0.fbx",
-      "/Glitter/Resources/models/troll/Troll.fbx",
-      "/Glitter/Resources/models/nanosuit/nanosuit.obj",
-      "/Glitter/Resources/models/woodenbox/woodenbox.fbx"
+      "/Glitter/Resources/models/mixamo/Brute.fbx"
     ],
     "sprites": []
   },

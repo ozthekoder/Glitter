@@ -107,8 +107,8 @@ namespace OZ {
 
     // Load Mesh Textures into VRAM
     std::map<GLuint, std::string> textures;
-    auto diffuse  = process(path, scene->mMaterials[mesh->mMaterialIndex], aiTextureType_DIFFUSE);
-    auto specular = process(path, scene->mMaterials[mesh->mMaterialIndex], aiTextureType_SPECULAR);
+    auto diffuse  = process(path, scene->mMaterials[mesh->mMaterialIndex], scene, aiTextureType_DIFFUSE);
+    auto specular = process(path, scene->mMaterials[mesh->mMaterialIndex], scene, aiTextureType_SPECULAR);
     textures.insert(diffuse.begin(), diffuse.end());
     textures.insert(specular.begin(), specular.end());
 
@@ -118,22 +118,37 @@ namespace OZ {
 
   std::map<GLuint, std::string> Mesh::process(std::string const & path,
       aiMaterial * material,
+      aiScene const* scene,
       aiTextureType type) {
     std::map<GLuint, std::string> textures;
     for(unsigned int i = 0; i < material->GetTextureCount(type); i++) {
       // Define Some Local Variables
-      GLenum format;
+      GLint format(0);
       GLuint texture;
       std::string mode;
 
       // Load the Texture Image from File
       aiString str; material->GetTexture(type, i, & str);
-      std::string filename = str.C_Str(); int width, height, channels;
+      std::string filename = str.C_Str(); 
+      int width, height, channels;
       std::cout << "FILENAME " << filename << std::endl;
-      if(filename.at(0) != '*') {
+      unsigned char * image;
+      bool stbiUsed = false;
+      if (filename.at(0) != '*') {
         filename = path + filename;
-        unsigned char * image = stbi_load(filename.c_str(), & width, & height, & channels, 0);
+        image = stbi_load(filename.c_str(), &width, &height, &channels, 0);
         if (!image) fprintf(stderr, "%s %s\n", "Failed to Load Texture", filename.c_str());
+        stbiUsed = true;
+      }
+      else {
+        int index = std::stoi(filename.substr(1));
+        aiTexture* tex = scene->mTextures[index];
+        height = tex->mHeight;
+        width = tex->mWidth;
+        image = (unsigned char*)(tex->pcData);
+        channels = GL_RGBA;
+      }
+        
 
         // Set the Correct Channel Format
         switch (channels) {
@@ -151,16 +166,16 @@ namespace OZ {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexImage2D(GL_TEXTURE_2D, 0, format,
-            width, height, 0, format, GL_UNSIGNED_BYTE, image);
+            width, height, 0, GLenum(format), GL_UNSIGNED_BYTE, image);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // Release Image Pointer and Store the Texture
-        stbi_image_free(image);
+        if (stbiUsed)
+          stbi_image_free(image);
         if (type == aiTextureType_DIFFUSE)  mode = "diffuse";
         else if (type == aiTextureType_SPECULAR) mode = "specular";
         textures.insert(std::make_pair(texture, mode));
       }
-    }
     return textures;
   }
 };

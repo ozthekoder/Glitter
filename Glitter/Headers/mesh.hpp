@@ -53,6 +53,7 @@ namespace OZ {
       void parse(std::string const & path, aiMesh const * mesh, aiScene const * scene);
       std::map<GLuint, std::string> process(std::string const & path,
           aiMaterial * material,
+          aiScene const *scene,
           aiTextureType type);
 
       // Private Member Containers
