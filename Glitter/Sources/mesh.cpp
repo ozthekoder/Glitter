@@ -143,10 +143,10 @@ namespace OZ {
       else {
         int index = std::stoi(filename.substr(1));
         aiTexture* tex = scene->mTextures[index];
-        height = tex->mHeight;
-        width = tex->mWidth;
-        image = (unsigned char*)(tex->pcData);
-        channels = GL_RGBA;
+
+        if (!tex->mHeight) {
+          image = stbi_load_from_memory((unsigned char*)(tex->pcData), tex->mWidth, &width, &height, &channels, 0);
+        }
       }
         
 
